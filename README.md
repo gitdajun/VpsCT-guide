@@ -1,27 +1,24 @@
-# VpsCT 中文安装与使用指南
+# VpsCT 安装与使用指南
 
-**VpsCT** 是面向个人和小团队的自托管服务器管理面板。  
-可集中管理多台 VPS 的状态、流量、服务配置，并按流量配额和有效期分享服务器资源。
+VpsCT 是面向个人与小团队的自托管 VPS 管理面板，可集中查看多台服务器状态与流量、下发服务配置，并按配额与有效期分享资源。
 
-> **原项目**：https://github.com/YongshengWin/VpsCT  
-> 本仓库仅为中文整理与安装指南，代码与发行包请使用原项目官方 Release。  
-> 原项目采用 MIT 许可证。
+程序与发行包请使用项目官方 Release 下载与更新。
 
 ---
 
-## 一、系统要求
+## 一、环境要求
 
-- 控制端：Debian / Ubuntu，systemd，Linux amd64 或 arm64
-- 被管理 VPS：同样支持 Debian / Ubuntu 等常见发行版
-- 需要一个已解析到控制端的域名（推荐开启 HTTPS）
+- 控制端：Debian / Ubuntu，systemd，amd64 或 arm64
+- 被管 VPS：常见 Linux 发行版即可
+- 建议准备已解析到控制端的域名（用于 HTTPS）
 
 ---
 
-## 二、安装控制端（面板）
+## 二、安装控制端
 
-### 方式 1：自动配置 HTTPS（推荐）
+### 自动 HTTPS（推荐）
 
-准备好域名（已解析到服务器），确保 80、443 端口空闲且公网可访问，然后执行：
+域名已解析、80/443 可用时：
 
 ```bash
 curl -fLsS --proto '=https' --proto-redir '=https' \
@@ -30,14 +27,11 @@ curl -fLsS --proto '=https' --proto-redir '=https' \
 sudo bash install-vpsct.sh --domain panel.example.com
 ```
 
-将 `panel.example.com` 替换为你的实际域名。
+将域名换成你的。若使用 Cloudflare 橙云，加密模式请选 **完全（严格）**，避免 Flexible 导致重定向循环。
 
-**Cloudflare 用户注意**：  
-若开启橙云，请使用 **完全（严格）/ Full (strict)** 加密模式，不要用「灵活 / Flexible」，否则会出现重定向循环。
+### 已有反代或其他端口
 
-### 方式 2：使用已有 HTTPS 入口或其他端口
-
-先把反向代理转发到本机 `127.0.0.1:8080`，再执行（以 8443 为例）：
+入口转发到 `127.0.0.1:8080` 后：
 
 ```bash
 curl -fLsS --proto '=https' --proto-redir '=https' \
@@ -46,51 +40,55 @@ curl -fLsS --proto '=https' --proto-redir '=https' \
 sudo bash install-vpsct.sh --site-url https://panel.example.com:8443 --no-proxy
 ```
 
-使用标准 443 端口时去掉 `:8443` 即可。
+标准 443 时可去掉端口号。
+
+也可使用本仓库脚本：
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/gitdajun/VpsCT-guide/main/scripts/install-panel.sh) 你的域名
+```
 
 ---
 
-## 三、创建管理员账户
+## 三、初始化管理员
 
-安装完成后，在**控制端服务器**执行：
+在控制端执行：
 
 ```bash
 sudo cat /opt/ctlvps/data/setup-token
 ```
 
-访问面板域名，输入令牌并设置管理员账号。初始化完成后令牌会自动失效。
+浏览器打开面板，用令牌创建管理员账号（用后失效）。
 
 ---
 
-## 四、接入被管理的 VPS
+## 四、接入 VPS
 
-1. 登录面板 → 「服务器」→「添加服务器」，填写名称、地址和流量配额
-2. 在服务器详情中生成 **agent 安装命令**
-3. 到目标 VPS 上以 **root** 执行生成的命令
-4. 返回面板，确认服务器显示「在线」
+1. 面板中「服务器」→ 添加，填写名称、地址、流量配额
+2. 在详情页生成 agent 安装命令
+3. 在目标机以 root 执行该命令
+4. 面板中确认状态为「在线」
 
-> agent 主动连接控制端，被管理 VPS **无需额外开放管理端口**。
-
-控制端本身也可以安装 agent，把本机也纳入管理。
+agent 主动连控制端，被管机器一般不必额外开放管理端口。控制端本机也可装 agent。
 
 ---
 
-## 五、日常管理功能
+## 五、常用能力
 
 | 功能 | 说明 |
 |------|------|
-| 状态监控 | CPU、内存、磁盘、实时网络速率 |
-| 流量统计 | 入站 + 出站，支持配额、周期重置、通知 |
-| 服务部署 | 通过面板下发配置，由 agent 在 VPS 上应用 |
-| 模板与订阅 | 维护配置模板，生成订阅链接 |
-| 资源分享 | 按流量配额、有效期分享给他人，独立凭据与用量统计 |
-| 安全 | 两步验证、操作审计、连接日志 |
+| 监控 | CPU / 内存 / 磁盘 / 网络 |
+| 流量 | 入站出站、配额、周期与通知 |
+| 配置下发 | 面板保存，agent 在 VPS 应用 |
+| 模板与订阅 | 模板生成订阅链接 |
+| 分享 | 按配额与有效期独立分享 |
+| 安全 | 两步验证、审计日志 |
 
 ---
 
-## 六、更新与维护
+## 六、更新与备份
 
-### 更新控制端
+更新控制端：
 
 ```bash
 curl -fLsS --proto '=https' --proto-redir '=https' \
@@ -99,68 +97,30 @@ curl -fLsS --proto '=https' --proto-redir '=https' \
 sudo bash install-vpsct.sh --update --auto-rollback
 ```
 
-更新前会自动停服备份，保留账户、配置和分享记录。
+也可在「设置 → 系统」中网页升级。agent 可随心跳同步，或在服务器详情中手动检查/升级/重下发配置。
 
-也可在面板 **设置 → 系统 → 控制端维护** 进行网页升级。
-
-### 同步 agent
-
-新版 agent 会随心跳自动同步。也可在服务器详情中手动：
-
-- 检查 agent 更新
-- 升级 agent
-- 重新下发配置
-
-### 备份
-
-控制端默认定时备份主数据库（保留 7 份）。完整迁移前请停止服务并备份整个数据目录 `/opt/ctlvps/data`。
+数据目录默认 `/opt/ctlvps/data`，迁移前请停服并完整备份。
 
 ---
 
 ## 七、卸载
 
 ```bash
-# 预览（不实际删除）
-sudo bash /opt/ctlvps/uninstall.sh --controller --dry-run
-
-# 卸载控制端
+sudo bash /opt/ctlvps/uninstall.sh --controller --dry-run   # 预览
 sudo bash /opt/ctlvps/uninstall.sh --controller --yes
-
-# 卸载 agent
 sudo bash /opt/ctlvps/uninstall.sh --agent --yes
-
-# 卸载本机两端
 sudo bash /opt/ctlvps/uninstall.sh --all --yes
 ```
 
-默认保留配置和数据；加 `--purge` 会永久删除数据与备份。
-
-也可在面板网页中完成卸载（需管理员密码 + 两步验证确认）。
+加 `--purge` 会删除数据与备份。网页端也可在设置中卸载（需密码与确认）。
 
 ---
 
-## 八、相关文档（原项目）
+## 八、说明
 
-| 内容 | 链接 |
-|------|------|
-| 安装、升级与恢复 | [operations.md](https://github.com/YongshengWin/VpsCT/blob/main/docs/operations.md) |
-| 共享代理与流量计量 | [shared-proxy-accounting.md](https://github.com/YongshengWin/VpsCT/blob/main/docs/shared-proxy-accounting.md) |
-| 隐私说明 | [privacy.md](https://github.com/YongshengWin/VpsCT/blob/main/docs/privacy.md) |
-| 变更记录 | [CHANGELOG.md](https://github.com/YongshengWin/VpsCT/blob/main/CHANGELOG.md) |
-| 安全设计 | [security-design.md](https://github.com/YongshengWin/VpsCT/blob/main/docs/security-design.md) |
-| 贡献指南 | [CONTRIBUTING.md](https://github.com/YongshengWin/VpsCT/blob/main/CONTRIBUTING.md) |
-
----
-
-## 九、免责声明
-
-- 本仓库仅做中文整理，所有程序、发行包、更新均来自原项目官方 Release。
-- 请遵守当地法律法规，仅将面板用于合法的服务器管理用途。
-- 使用风险自负，与本仓库维护者无关。
-
----
+- 请仅用于合法的服务器管理
+- 使用风险自负
 
 ## License
 
-原项目采用 [MIT License](https://github.com/YongshengWin/VpsCT/blob/main/LICENSE)。  
-本指南内容同样以 MIT 方式公开。
+MIT License
